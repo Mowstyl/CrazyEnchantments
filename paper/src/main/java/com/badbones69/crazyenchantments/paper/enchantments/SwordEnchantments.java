@@ -11,7 +11,6 @@ import com.badbones69.crazyenchantments.paper.api.enums.Messages;
 import com.badbones69.crazyenchantments.paper.api.events.RageBreakEvent;
 import com.badbones69.crazyenchantments.paper.api.objects.CEPlayer;
 import com.badbones69.crazyenchantments.paper.api.objects.CEnchantment;
-import com.badbones69.crazyenchantments.paper.api.builders.ItemBuilder;
 import com.badbones69.crazyenchantments.paper.api.utils.EnchantUtils;
 import com.badbones69.crazyenchantments.paper.api.utils.EntityUtils;
 import com.badbones69.crazyenchantments.paper.api.utils.EventUtils;
@@ -19,6 +18,8 @@ import com.badbones69.crazyenchantments.paper.controllers.BossBarController;
 import com.badbones69.crazyenchantments.paper.controllers.settings.EnchantmentBookSettings;
 import com.badbones69.crazyenchantments.paper.support.PluginSupport;
 import com.ryderbelserion.fusion.paper.builders.folia.FoliaScheduler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
@@ -36,6 +37,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -311,9 +313,15 @@ public class SwordEnchantments implements Listener {
         ItemStack item = this.methods.getItemInHand(damager);
         Map<CEnchantment, Integer> enchantments = this.enchantmentBookSettings.getEnchantments(item);
 
-        if (EnchantUtils.isEventActive(CEnchantments.HEADLESS, damager, item, enchantments)) {
-            ItemStack head = new ItemBuilder().setMaterial("PLAYER_HEAD").setPlayerName(player.getName()).build();
-            event.getDrops().add(head);
+        if (!EventUtils.containsDrop(event, Material.PLAYER_HEAD)) {
+            if (EnchantUtils.isEventActive(CEnchantments.HEADLESS, damager, item, enchantments)) {
+                ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+                head.editMeta(SkullMeta.class, meta -> {
+                    meta.setOwningPlayer(player);
+                    meta.displayName(player.name().append(Component.text("'s Head")).decoration(TextDecoration.ITALIC, false));
+                });
+                event.getDrops().add(head);
+            }
         }
 
         if (EnchantUtils.isEventActive(CEnchantments.REVENGE, damager, item, enchantments)) {
@@ -343,8 +351,7 @@ public class SwordEnchantments implements Listener {
             if (headMat != null && !EventUtils.containsDrop(event, headMat)) {
                 double multiplier = this.crazyManager.getDecapitationHeadMap().getOrDefault(headMat, 0.0);
                 if (multiplier != 0.0 && EnchantUtils.isEventActive(CEnchantments.HEADLESS, damager, item, enchantments, multiplier)) {
-                    ItemStack head = new ItemBuilder().setMaterial(headMat).build();
-                    event.getDrops().add(head);
+                    event.getDrops().add(new ItemStack(headMat));
                 }
 			}
 

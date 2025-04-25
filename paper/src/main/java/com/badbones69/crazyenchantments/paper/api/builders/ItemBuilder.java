@@ -915,8 +915,8 @@ public class ItemBuilder {
      * @param playerName The player being displayed on the head.
      * @return The ItemBuilder with an updated Player Name.
      */
-    public ItemBuilder setPlayerName(@NotNull final String playerName) {
-        if (playerName.isEmpty()) return this;
+    public ItemBuilder setPlayerName(final String playerName) {
+        if (playerName == null || playerName.isEmpty()) return this;
 
         this.player = playerName;
 
